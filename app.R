@@ -26,7 +26,6 @@ toF <- function(degree.celcius) {
 
 
 ui <- fluidPage(
-    titlePanel("Coffee Roasting Profiles"),
     sidebarLayout(
         mainPanel(plotOutput('plot'),
                   tableOutput('info')),
