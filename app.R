@@ -7,7 +7,7 @@ library(ggrepel)
 COFFEE_DIR <- 'data/coffees/'
 ROAST_DIR <- 'data/roasts/'
 coffee_files <- str_remove_all(list.files(COFFEE_DIR), '.csv')
-roast_files <- str_remove_all(list.files(ROAST_DIR), '.csv')
+roast_files <- rev(str_remove_all(list.files(ROAST_DIR), '.csv'))
 
 ## Cache which coffee was roasted at each date
 roast_coffees <- rep('', length(roast_files))
@@ -30,7 +30,7 @@ ui <- fluidPage(
         mainPanel(plotOutput('plot'),
                   tableOutput('info')),
         sidebarPanel(uiOutput('roast'),
-                     selectInput('coffee', 'Filter By Coffee', 
+                     selectInput('coffee', 'Filter By Coffee',
                                  c('Select a coffee'='', coffee_files),
                                  multiple=TRUE),
                      radioButtons('unit', 'Unit', choices=c('Celcius', 'Fahrenheit')),
@@ -51,7 +51,7 @@ server <- function(input, output) {
         if (length(input$coffee) > 0)
             files <- roast_files[roast_coffees %in% input$coffee]
         
-        selectInput('roast', 'Roast', files)
+        selectInput('roast', 'Roast', files, selected=files[1])
     })
     output$plot <- renderPlot({
         if (!file.exists(paste0(ROAST_DIR, input$roast, '.csv')))
@@ -68,7 +68,11 @@ server <- function(input, output) {
                                 RoR=c(0, diff(temp)))
             tempRange <- input$tempRangeF
         }
-        
+
+        if (!file.exists(paste0(COFFEE_DIR,  df$name[1], '.csv'))) {
+            print(paste0('Coffee: ', df$name[1], ' not found.'))
+            return()
+        }
         df.coffee <- read.csv(paste0(COFFEE_DIR, df$name[1], '.csv'))
         
         ggplot(df) +
