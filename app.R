@@ -11,8 +11,9 @@ roast_files <- rev(str_remove_all(list.files(ROAST_DIR), '.csv'))
 
 ## Cache which coffee was roasted at each date
 roast_coffees <- rep('', length(roast_files))
-for (i in 1:length(roast_files))
+for (i in 1:length(roast_files)) {
     roast_coffees[i] <- read.csv(paste0(ROAST_DIR, roast_files[i], '.csv'))$name[1]
+}
 
 ## Linearly map from [min1, max1] to [min2, max2]
 mapInterval <- function(x, min1, max1, min2, max2) {
