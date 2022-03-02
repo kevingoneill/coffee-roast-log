@@ -1,19 +1,16 @@
 library(shiny)
-library(ggplot2)
-library(dplyr)
-library(stringr)
+library(tidyverse)
 library(ggrepel)
 
-COFFEE_DIR <- 'data/coffees/'
 ROAST_DIR <- 'data/roasts/'
-coffee_files <- str_remove_all(list.files(COFFEE_DIR), '.csv')
 roast_files <- rev(str_remove_all(list.files(ROAST_DIR), '.csv'))
-
-## Cache which coffee was roasted at each date
-roast_coffees <- rep('', length(roast_files))
-for (i in 1:length(roast_files)) {
-    roast_coffees[i] <- read.csv(paste0(ROAST_DIR, roast_files[i], '.csv'))$name[1]
-}
+coffees <- read_csv('data/coffees.csv') %>% arrange(origin, name)
+roasts <- read_csv(paste0(ROAST_DIR, roast_files, '.csv')) %>%
+    filter(time==0) %>%
+    select(name, date) %>%
+    rename(id=name) %>%
+    left_join(coffees) %>%
+    mutate(date=roast_files)
 
 ## Linearly map from [min1, max1] to [min2, max2]
 mapInterval <- function(x, min1, max1, min2, max2) {
@@ -32,7 +29,7 @@ ui <- fluidPage(
                   tableOutput('info')),
         sidebarPanel(uiOutput('roast'),
                      selectInput('coffee', 'Filter By Coffee',
-                                 c('Select a coffee'='', coffee_files),
+                                 c('Select a coffee'='', coffees$name),
                                  multiple=TRUE),
                      radioButtons('unit', 'Unit', choices=c('Celcius', 'Fahrenheit')),
                      conditionalPanel('input.unit == "Celcius"',
@@ -48,33 +45,31 @@ ui <- fluidPage(
 
 server <- function(input, output) {
     output$roast <- renderUI({
-        files <- roast_files
+        files <- roasts$date
         if (length(input$coffee) > 0)
-            files <- roast_files[roast_coffees %in% input$coffee]
-        
+            files <- roasts %>% filter(name %in% input$coffee) %>% pull(date)
         selectInput('roast', 'Roast', files, selected=files[1])
     })
     output$plot <- renderPlot({
         if (!file.exists(paste0(ROAST_DIR, input$roast, '.csv')))
             return()
         
-        df <- read.csv(paste0(ROAST_DIR, input$roast, '.csv'),
-                       stringsAsFactors=FALSE) %>%
+        df <- read_csv(paste0(ROAST_DIR, input$roast, '.csv')) %>%
             mutate(RoR=c(0, diff(temp)))
         tempRange <- input$tempRangeC
-
+        
         ## Convert to F
         if (input$unit == 'Fahrenheit') {
             df <- df %>% mutate(temp=toF(temp),
-                                RoR=c(0, diff(temp)))
+                                RoR=c(0, diff(temp)/diff(time)))
             tempRange <- input$tempRangeF
         }
 
-        if (!file.exists(paste0(COFFEE_DIR,  df$name[1], '.csv'))) {
+        if (!(df$name[1] %in% coffees$id)) {
             print(paste0('Coffee: ', df$name[1], ' not found.'))
             return()
         }
-        df.coffee <- read.csv(paste0(COFFEE_DIR, df$name[1], '.csv'))
+        df.coffee <- coffees %>% filter(id == df$name[1])
         
         ggplot(df) +
             aes(x=time) +
@@ -99,17 +94,12 @@ server <- function(input, output) {
     })
     
     output$info <- renderTable({
-        if (!file.exists(paste0(ROAST_DIR, input$roast, '.csv')))
-            return(data.frame())
-        
-        df <- read.csv(paste0(ROAST_DIR, input$roast, '.csv'),
-                       stringsAsFactors=FALSE)
-        if (!file.exists(paste0(COFFEE_DIR, df$name[1], '.csv')))
-            return(data.frame())
-        
-        return(read.csv(paste0(COFFEE_DIR, df$name[1], '.csv')))
-        
-    })
+        roasts %>%
+            filter(date == input$roast) %>%
+            select(-id, -date) %>%
+            mutate(url=paste0('<a href="', url, '" target="_blank">', url, '</a>')) %>%
+            return()
+    }, sanitize.text.function = function(x) x)
 }
 
 shinyApp(ui = ui, server = server)
