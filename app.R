@@ -10,7 +10,8 @@ roasts <- read_csv(paste0(ROAST_DIR, roast_files, '.csv')) %>%
     select(name, date) %>%
     rename(id=name) %>%
     left_join(coffees) %>%
-    mutate(date=roast_files)
+    mutate(date=roast_files,
+           roast_name=paste0(name, ' (', date, ')'))
 
 ## Linearly map from [min1, max1] to [min2, max2]
 mapInterval <- function(x, min1, max1, min2, max2) {
@@ -28,6 +29,9 @@ ui <- fluidPage(
         mainPanel(plotOutput('plot'),
                   tableOutput('info')),
         sidebarPanel(uiOutput('roast'),
+                     selectInput('origin', 'Filter By Origin',
+                                 c('Select a coffee'='', unique(coffees$origin)),
+                                 multiple=TRUE),
                      selectInput('coffee', 'Filter By Coffee',
                                  c('Select a coffee'='', coffees$name),
                                  multiple=TRUE),
@@ -45,16 +49,19 @@ ui <- fluidPage(
 
 server <- function(input, output) {
     output$roast <- renderUI({
-        files <- roasts$date
+        files <- roasts
+        if (length(input$origin) > 0)
+            files <- files %>% filter(origin %in% input$origin)
         if (length(input$coffee) > 0)
-            files <- roasts %>% filter(name %in% input$coffee) %>% pull(date)
-        selectInput('roast', 'Roast', files, selected=files[1])
+            files <- files %>% filter(name %in% input$coffee)
+        selectInput('roast', 'Roast', files$roast_name, selected=files$roast_name[1])
     })
     output$plot <- renderPlot({
-        if (!file.exists(paste0(ROAST_DIR, input$roast, '.csv')))
+        roast <- roasts %>% filter(roast_name == input$roast)
+        if (!file.exists(paste0(ROAST_DIR, roast$date, '.csv')))
             return()
         
-        df <- read_csv(paste0(ROAST_DIR, input$roast, '.csv')) %>%
+        df <- read_csv(paste0(ROAST_DIR, roast$date, '.csv')) %>%
             mutate(RoR=c(0, diff(temp)))
         tempRange <- input$tempRangeC
         
@@ -95,8 +102,8 @@ server <- function(input, output) {
     
     output$info <- renderTable({
         roasts %>%
-            filter(date == input$roast) %>%
-            select(-id, -date) %>%
+            filter(roast_name == input$roast) %>%
+            select(-id, -date, -roast_name) %>%
             mutate(url=paste0('<a href="', url, '" target="_blank">', url, '</a>')) %>%
             return()
     }, sanitize.text.function = function(x) x)
