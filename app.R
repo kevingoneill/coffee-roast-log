@@ -85,7 +85,7 @@ server <- function(input, output) {
                                         tempRange[1], tempRange[2]),
                           color='Gas'), size=2) +
             geom_line(aes(y=RoR, color='Rate of Rise'), size=2) +
-            geom_label_repel(aes(y=temp, label=notes), size=3.5, direction='x') +
+            geom_label_repel(aes(y=temp, label=notes), size=3.5, direction='x', na.rm=TRUE) +
             scale_y_continuous(name=paste0('Temperature (', input$unit, ')'),
                                sec.axis=sec_axis(trans=function(x)
                                    mapInterval(x, tempRange[1], tempRange[2],
