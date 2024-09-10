@@ -1,0 +1,16 @@
+name,date,time,heat,temp,notes,unit
+colombia-huila-sidra,7/7/24,0,11,450,,F
+colombia-huila-sidra,7/7/24,0.5,11,375,,F
+colombia-huila-sidra,7/7/24,1,11,350,,F
+colombia-huila-sidra,7/7/24,1.5,11,350,steam,F
+colombia-huila-sidra,7/7/24,2,10,345,yellow,F
+colombia-huila-sidra,7/7/24,2.5,10,350,,F
+colombia-huila-sidra,7/7/24,3,9,355,,F
+colombia-huila-sidra,7/7/24,3.5,9,365,,F
+colombia-huila-sidra,7/7/24,4,8,375,,F
+colombia-huila-sidra,7/7/24,4.5,8,380,brown,F
+colombia-huila-sidra,7/7/24,5,8,395,,F
+colombia-huila-sidra,7/7/24,5.5,7,400,,F
+colombia-huila-sidra,7/7/24,6,6,410,FC,F
+colombia-huila-sidra,7/7/24,6.5,5,412,,F
+colombia-huila-sidra,7/7/24,7,5,415,,F

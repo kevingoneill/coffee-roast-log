@@ -5,7 +5,8 @@ library(ggrepel)
 ROAST_DIR <- 'data/roasts/'
 roast_files <- rev(str_remove_all(list.files(ROAST_DIR), '.csv'))
 coffees <- read_csv('data/coffees.csv') %>% arrange(origin, name)
-roasts <- read_csv(paste0(ROAST_DIR, roast_files, '.csv')) %>%
+roasts <- read_csv(paste0(ROAST_DIR, roast_files, '.csv'),
+                   col_types=cols(unit=col_character())) %>%
     filter(time==0) %>%
     select(name, date) %>%
     rename(id=name) %>%
@@ -23,6 +24,10 @@ toF <- function(degree.celcius) {
     return(degree.celcius * 9/5 + 32)
 }
 
+## Convert from F to C
+toC <- function(degree.fahrenheit) {
+    return((degree.fahrenheit - 32) * 5/9)
+}
 
 ui <- fluidPage(
     sidebarLayout(
@@ -41,8 +46,7 @@ ui <- fluidPage(
                                                   -250, 250, c(0, 225))),
                      conditionalPanel('input.unit != "Celcius"',
                                       sliderInput('tempRangeF', 'Temperature',
-                                                  toF(-250), toF(250),
-                                                  toF(c(0, 225)))),
+                                                  -500, 500, c(0, 450))),
                      sliderInput('heatRange', 'Heat',
                                  0, 12, c(0, 12)))))
 
@@ -61,17 +65,23 @@ server <- function(input, output) {
         if (!file.exists(paste0(ROAST_DIR, roast$date, '.csv')))
             return()
         
-        df <- read_csv(paste0(ROAST_DIR, roast$date, '.csv')) %>%
-            mutate(RoR=c(0, diff(temp)))
+        df <- read_csv(paste0(ROAST_DIR, roast$date, '.csv'),
+                       col_types=cols(unit=col_character()))
         tempRange <- input$tempRangeC
         
-        ## Convert to F
+        ## Make units consistent
         if (input$unit == 'Fahrenheit') {
-            df <- df %>% mutate(temp=toF(temp),
-                                RoR=c(0, diff(temp)/diff(time)))
+            if (first(df$unit) == 'C')
+                df <- df %>% mutate(temp=toF(temp))
             tempRange <- input$tempRangeF
+        } else {
+            if (first(df$unit) == 'F')
+                df <- df %>% mutate(temp=toC(temp))
         }
 
+        ## Calculate rate of rise
+        df <- df %>% mutate(RoR=c(0, diff(temp)/diff(time)))
+        
         if (!(df$name[1] %in% coffees$id)) {
             print(paste0('Coffee: ', df$name[1], ' not found.'))
             return()

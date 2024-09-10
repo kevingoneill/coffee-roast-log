@@ -1,0 +1,16 @@
+name,date,time,heat,temp,notes,unit
+nicaragua-los-altiplanos,8/1/23,0,11,325,,F
+nicaragua-los-altiplanos,8/1/23,0.5,11,250,,F
+nicaragua-los-altiplanos,8/1/23,1,11,225,,F
+nicaragua-los-altiplanos,8/1/23,1.5,11,215,,F
+nicaragua-los-altiplanos,8/1/23,2,10,225,steam,F
+nicaragua-los-altiplanos,8/1/23,2.5,10,225,yellow,F
+nicaragua-los-altiplanos,8/1/23,3,10,230,,F
+nicaragua-los-altiplanos,8/1/23,3.5,9,250,,F
+nicaragua-los-altiplanos,8/1/23,4,9,255,,F
+nicaragua-los-altiplanos,8/1/23,4.5,8,270,brown,F
+nicaragua-los-altiplanos,8/1/23,5,8,275,,F
+nicaragua-los-altiplanos,8/1/23,5.5,8,280,,F
+nicaragua-los-altiplanos,8/1/23,6,7,295,FC,F
+nicaragua-los-altiplanos,8/1/23,6.5,7,300,,F
+nicaragua-los-altiplanos,8/1/23,7,7,305,,F
